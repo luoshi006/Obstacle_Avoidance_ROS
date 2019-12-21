@@ -173,6 +173,9 @@
 		<odometryFrame>odom</odometryFrame>
 		<odometryTopic>odom</odometryTopic>
 		<robotBaseFrame>base_footprint</robotBaseFrame>
+		<legacyMode>true</legacyMode>
+		<odometrySource>world</odometrySource>
+		<publishOdomTF>true</publishOdomTF>
 	  </plugin>
 	</gazebo>
 
