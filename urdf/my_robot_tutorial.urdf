@@ -162,6 +162,7 @@
 		<publishWheelJointState>false</publishWheelJointState>
 		<alwaysOn>true</alwaysOn>
 		<updateRate>100.0</updateRate>
+		<legacyMode>true</legacyMode>
 		<leftJoint>left_wheel_joint</leftJoint>
 		<rightJoint>right_wheel_joint</rightJoint>
 		<wheelSeparation>1.5</wheelSeparation>
@@ -172,10 +173,9 @@
 		<commandTopic>cmd_vel</commandTopic>
 		<odometryFrame>odom</odometryFrame>
 		<odometryTopic>odom</odometryTopic>
-		<robotBaseFrame>base_footprint</robotBaseFrame>
-		<legacyMode>true</legacyMode>
 		<odometrySource>world</odometrySource>
 		<publishOdomTF>true</publishOdomTF>
+		<robotBaseFrame>base_footprint</robotBaseFrame>
 	  </plugin>
 	</gazebo>
 
@@ -223,6 +223,95 @@
 	      </plugin>
 	    </sensor>
   	</gazebo>
+
+    <!--       3D sensor          -->
+    <!--http://answers.gazebosim.org/question/4266/gazebo-15-libgazebo_openni_kinectso-pointcloud-data-is-rotated-and-flipped/ -->
+    <!--https://answers.ros.org/question/232534/gazebo-camera-frame-is-inconsistent-with-rviz-opencv-convention/?answer=232562#post-id-232562-->
+    <link name="depth_image_link">
+      <inertial>
+        <!-- <pose>-0.069 0 0.104 0 0 0</pose>-->
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+        <mass value="0.035"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="0.008 0.130 0.022"/>
+        </geometry>
+        <material name="red"/>
+      </visual>
+
+      <collision name="depth_image_collision">
+        <!-- <pose>-0.069 0 0.104 0 0 0</pose>-->
+        <geometry>
+          <box size="0.008 0.130 0.022"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="image_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="depth_image_link"/>
+      <origin xyz="0.70 0 0.175" rpy="0 0 0" />
+      <!--<pose>0.1 0 0.1 0 0 0</pose>-->
+    </joint>
+    <!--https://www.ros.org/reps/rep-0103.html#suffix-frames -->
+    <joint name="camera_optical_joint" type="fixed">
+        <!-- these values have to be these values otherwise the gazebo camera
+            image won't be aligned properly with the frame it is supposedly
+            originating from -->
+        <origin xyz="0 0 0" rpy="-1.570796326 0 -1.570796326"/>
+        <parent link="depth_image_link"/>
+        <child link="camera_link_optical"/>
+    </joint>
+
+    <link name="camera_link_optical">
+    </link>
+
+    <gazebo reference="depth_image_link">
+    <material>Gazebo/Red</material>
+    <sensor name="depth_image_camera" type="depth">
+        <update_rate>20</update_rate>
+        <visualize>true</visualize>
+        <camera>
+            <horizontal_fov>1.3962634</horizontal_fov> <!-- 1.047198 1.3962634 -->
+            <image>
+                <width>640</width>
+                <height>480</height>
+                <format>R8G8B8</format>
+            </image>
+            <clip>
+                <near>0.005</near>
+                <far>30</far>
+            </clip>
+        </camera>
+        <plugin name="depth_image_controller" filename="libgazebo_ros_openni_kinect.so">
+            <baseline>0.2</baseline>
+            <alwaysOn>true</alwaysOn>
+            <updateRate>0.0</updateRate>
+            <cameraName>depth_camera_ir</cameraName>
+            <imageTopicName>/depth_camera/image/image_raw</imageTopicName>
+            <cameraInfoTopicName>/depth_camera/image/camera_info</cameraInfoTopicName>
+            <depthImageTopicName>/depth_camera/depth/image_raw</depthImageTopicName>
+            <depthImageInfoTopicName>/depth_camera/depth/camera_info</depthImageInfoTopicName>
+            <pointCloudTopicName>/depth_camera/depth/points</pointCloudTopicName>
+            <frameName>camera_link_optical</frameName>
+            <pointCloudCutoff>0.4</pointCloudCutoff>
+            <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
+            <distortionK1>0.00000001</distortionK1>
+            <distortionK2>0.00000001</distortionK2>
+            <distortionK3>0.00000001</distortionK3>
+            <distortionT1>0.00000001</distortionT1>
+            <distortionT2>0.00000001</distortionT2>
+            <CxPrime>0</CxPrime>
+            <Cx>0</Cx>
+            <Cy>0</Cy>
+            <focalLength>0</focalLength>
+            <hackBaseline>0.07</hackBaseline>
+        </plugin>
+    </sensor>
+    </gazebo>
 
 <!-- ====================================CASTER WHEELS========================================== -->
 
